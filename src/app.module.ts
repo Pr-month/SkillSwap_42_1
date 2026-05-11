@@ -11,10 +11,12 @@ import { databaseConfig } from './config/database.config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      load: [databaseConfig],
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        ...databaseConfig(),
+      inject: [databaseConfig.KEY],
+      useFactory: (config: ReturnType<typeof databaseConfig>) => ({
+        ...config,
         autoLoadEntities: true,
       }),
     }),

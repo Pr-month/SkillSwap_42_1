@@ -10,6 +10,7 @@ export const databaseConfig = registerAs(
     username: process.env.POSTGRES_USER || 'devuser',
     password: process.env.POSTGRES_PASSWORD || 'devpass',
     database: process.env.POSTGRES_DB || 'skillswap',
-    synchronize: true,
+    synchronize: process.env.NODE_ENV !== 'production',
+    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   }),
 );
