@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
+import { appConfiguration, TAppConfig } from '../config/app-configuration';
 import { User } from '../users/entities/user.entity';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
@@ -12,7 +12,8 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    private readonly configService: ConfigService,
+    @Inject(appConfiguration.KEY)
+    private readonly appConfig: TAppConfig,
   ) {}
 
   /** Хеширует пароль с помощью bcrypt.
@@ -21,7 +22,7 @@ export class AuthService {
    * @returns Хеш пароля.
    */
   async hashPassword(plainPassword: string): Promise<string> {
-    const rounds = this.configService.get<number>('app.hashSalt') ?? 10;
+    const rounds = this.appConfig.hashSalt;
     return bcrypt.hash(plainPassword, rounds);
   }
 
