@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,12 +11,14 @@ import { getDatabaseConfig } from './config/database.config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [appConfiguration],
+      load: [appConfiguration, databaseConfig],
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: getDatabaseConfig,
+      inject: [databaseConfig.KEY],
+      useFactory: (config: ReturnType<typeof databaseConfig>) => ({
+        ...config,
+        autoLoadEntities: true,
+      }),
     }),
     ...getAppImports(),
   ],

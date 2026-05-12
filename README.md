@@ -39,7 +39,7 @@ git push origin week1
 git checkout week1
 git pull origin week1
 git checkout -b week1-username
-git push origin week1-username
+git push -u origin week1-username
 ```
 
 Работа выполняется в этой ветке.
