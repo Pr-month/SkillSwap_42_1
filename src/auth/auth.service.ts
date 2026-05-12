@@ -1,11 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { appConfiguration, TAppConfig } from '../config/app-configuration';
+import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
 import { User } from '../users/entities/user.entity';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { JwtPayload, REFRESH_JWT_TYPE, RefreshAuthUser } from './auth.types';
 
 @Injectable()
 export class AuthService {
@@ -14,10 +15,14 @@ export class AuthService {
     private readonly usersRepository: Repository<User>,
     @Inject(appConfiguration.KEY)
     private readonly appConfig: TAppConfig,
+    @Inject(jwtConfiguration.KEY)
+    private readonly jwtConfig: TJwtConfig,
+    private readonly jwtService: JwtService,
   ) {}
 
-  /** Хеширует пароль с помощью bcrypt.
-   * 
+  /**
+   * Хеширует пароль перед сохранением в БД.
+   *
    * @param plainPassword - Пароль, введенный пользователем.
    * @returns Хеш пароля.
    */
@@ -26,29 +31,103 @@ export class AuthService {
     return bcrypt.hash(plainPassword, rounds);
   }
 
-  create(createAuthDto: CreateAuthDto) {
-    return {
-      message: 'This action adds a new auth',
-      received: createAuthDto,
+  /**
+   * Хеширует сырое значение refresh токена перед записью в поле `users.refresh_token`.
+   * Клиенту всегда отдается нехешированный refresh токен; в БД хранится только хеш.
+   *
+   * @param rawToken - Подписанный refresh JWT в виде строки.
+   * @returns Хеш bcrypt.
+   */
+  async hashRefreshToken(rawToken: string): Promise<string> {
+    const rounds = this.appConfig.hashSalt;
+    return bcrypt.hash(rawToken, rounds);
+  }
+
+  /**
+   * Выпускает пару access и refresh токенов и обновляет хеш refresh в БД для пользователя.
+   * Используется после успешного логина или регистрации или при ротации refresh JWT.
+   *
+   * @param user - Сущность пользователя (нужны `id`, `email`, `roleId`).
+   * @returns Объект с полями `accessToken` и `refreshToken` (сырые токены для ответа клиенту / куки).
+   */
+  async issueTokenPair(user: User): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const accessToken = await this.signAccessToken(user);
+    const refreshToken = await this.signRefreshToken(user);
+    await this.persistRefreshTokenHash(user.id, refreshToken);
+    return { accessToken, refreshToken };
+  }
+
+  /**
+   * Выпускает новую пару токенов после успешной проверки refresh (например `POST /auth/refresh` + `RefreshTokenGuard`).
+   *
+   * @param user — данные из `req.user` после гарды refresh токена (`id`, `email`, `role`).
+   * @returns Новая пара `accessToken` и `refreshToken`.
+   * @throws {@link UnauthorizedException} если пользователь с `user.id` не найден в БД.
+   */
+  async refreshSession(user: RefreshAuthUser): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const full = await this.usersRepository.findOne({ where: { id: user.id } });
+    if (!full) {
+      throw new UnauthorizedException();
+    }
+    return this.issueTokenPair(full);
+  }
+
+  /**
+   * Подписывает access токен.
+   *
+   * @param user — пользователь для полей `id`, `email`, `role`.
+   * @returns Подписанная строка access токена.
+   */
+  private async signAccessToken(user: User): Promise<string> {
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      role: user.roleId,
     };
+    return this.jwtService.signAsync(payload, {
+      secret: this.jwtConfig.accessSecret,
+      expiresIn: this.jwtConfig.accessExpiresIn,
+    });
   }
 
-  findAll() {
-    return this.usersRepository.find();
+  /**
+   * Подписывает refresh токен.
+   *
+   * @param user - Пользователь для полей 'id', 'email', 'role'.
+   * @returns Подписанная строка refresh токена.
+   */
+  private async signRefreshToken(user: User): Promise<string> {
+    return this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        role: user.roleId,
+        type: REFRESH_JWT_TYPE,
+      },
+      {
+        secret: this.jwtConfig.refreshSecret,
+        expiresIn: this.jwtConfig.refreshExpiresIn,
+      },
+    );
   }
 
-  findOne(id: number) {
-    return this.usersRepository.findOne({ where: { id } });
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return {
-      message: `This action updates a #${id} auth`,
-      received: updateAuthDto,
-    };
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  /**
+   * Сохраняет в БД bcrypt хеш сырого refresh токена для указанного пользователя.
+   *
+   * @param userId — идентификатор пользователя (`users.id`).
+   * @param rawRefreshToken — нехешированный refresh токен (тот, что уходит на клиент).
+   */
+  private async persistRefreshTokenHash(
+    userId: number,
+    rawRefreshToken: string,
+  ): Promise<void> {
+    const hash = await this.hashRefreshToken(rawRefreshToken);
+    await this.usersRepository.update(userId, { refreshToken: hash });
   }
 }
