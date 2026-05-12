@@ -18,7 +18,17 @@ export class UsersService {
   }
 
   findAll() {
-    return this.usersRepository.find();
+    return this.usersRepository.find({
+      select: {
+        id: true,
+        name: true,
+        about: true,
+        birthDate: true,
+        gender: true,
+        avatar: true,
+        cityId: true,
+      },
+    });
   }
 
   findOne(id: number) {
