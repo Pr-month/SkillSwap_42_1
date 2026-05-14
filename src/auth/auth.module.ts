@@ -39,4 +39,4 @@ import { User } from 'src/users/entities/user.entity';
   ],
   exports: [AuthService, JwtModule, AccessTokenGuard, RefreshTokenGuard],
 })
-export class AuthModule { }
+export class AuthModule {}
