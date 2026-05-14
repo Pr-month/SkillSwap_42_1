@@ -1,8 +1,8 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Inject, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
 import { appConfiguration, TAppConfig } from '../config/app-configuration';
 import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
 import { User } from '../users/entities/user.entity';
@@ -11,8 +11,6 @@ import { JwtPayload, REFRESH_JWT_TYPE, RefreshAuthUser } from './auth.types';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
     @Inject(appConfiguration.KEY)
     private readonly appConfig: TAppConfig,
     @Inject(jwtConfiguration.KEY)

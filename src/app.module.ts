@@ -8,7 +8,7 @@ import {
   getAppImports,
   jwtConfiguration,
 } from './config/app.config';
-import { databaseConfig } from './config/database.config';
+import { databaseConfig, TDatabaseConfig } from './config/database.config';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { databaseConfig } from './config/database.config';
     }),
     TypeOrmModule.forRootAsync({
       inject: [databaseConfig.KEY],
-      useFactory: (config: ReturnType<typeof databaseConfig>) => ({
+      useFactory: (config: TDatabaseConfig) => ({
         ...config,
         autoLoadEntities: true,
       }),
