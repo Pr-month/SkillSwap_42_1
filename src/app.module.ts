@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { appConfiguration, getAppImports } from './config/app.config';
-import { getDatabaseConfig } from './config/database.config';
+import { databaseConfig, TDatabaseConfig } from './config/database.config';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { getDatabaseConfig } from './config/database.config';
     }),
     TypeOrmModule.forRootAsync({
       inject: [databaseConfig.KEY],
-      useFactory: (config: ReturnType<typeof databaseConfig>) => ({
+      useFactory: (config: TDatabaseConfig) => ({
         ...config,
         autoLoadEntities: true,
       }),

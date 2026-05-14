@@ -1,4 +1,4 @@
-import { registerAs } from '@nestjs/config';
+import { ConfigType, registerAs } from '@nestjs/config';
 import { DataSourceOptions } from 'typeorm';
 
 export const databaseConfig = registerAs(
@@ -14,3 +14,5 @@ export const databaseConfig = registerAs(
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   }),
 );
+
+export type TDatabaseConfig = ConfigType<typeof databaseConfig>;
