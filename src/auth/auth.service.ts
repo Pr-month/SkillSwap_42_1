@@ -1,12 +1,12 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Inject, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { appConfiguration, TAppConfig } from '../config/app-configuration';
 import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
 import { User } from '../users/entities/user.entity';
 import { JwtPayload, REFRESH_JWT_TYPE, RefreshAuthUser } from './auth.types';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +16,9 @@ export class AuthService {
     @Inject(jwtConfiguration.KEY)
     private readonly jwtConfig: TJwtConfig,
     private readonly jwtService: JwtService,
-  ) {}
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+  ) { }
 
   /**
    * Хеширует пароль перед сохранением в БД.
