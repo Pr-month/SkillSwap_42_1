@@ -1,4 +1,4 @@
-import { Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { RefreshAuthUser } from './auth.types';
@@ -9,6 +9,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('refresh')
+  @HttpCode(200)
   @UseGuards(RefreshTokenGuard)
   refresh(@Req() req: Request & { user: RefreshAuthUser }) {
     return this.authService.refreshSession(req.user);
