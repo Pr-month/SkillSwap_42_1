@@ -10,10 +10,19 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
+import { JwtPayload } from 'src/auth/auth.types';
+import { UseGuards, Req } from '@nestjs/common';
+import { Request } from 'express';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+  @Get('me')
+  @UseGuards(AccessTokenGuard)
+  async findMe(@Req() req: Request & { user: JwtPayload }) {
+    return await this.usersService.findMe(req.user.sub);
+  }
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {

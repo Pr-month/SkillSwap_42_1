@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +16,27 @@ export class UsersService {
   create(createUserDto: CreateUserDto) {
     const user = this.usersRepository.create(createUserDto as Partial<User>);
     return this.usersRepository.save(user);
+  }
+
+  async findMe(id: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        about: true,
+        birthDate: true,
+        gender: true,
+        avatar: true,
+        cityId: true,
+        roleId: true,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   findAll() {
