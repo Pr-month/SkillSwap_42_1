@@ -14,6 +14,7 @@ import { JwtPayload, REFRESH_JWT_TYPE, RefreshAuthUser } from './auth.types';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -90,6 +91,36 @@ export class AuthService {
     const refreshToken = await this.signRefreshToken(user);
     await this.persistRefreshTokenHash(user.id, refreshToken);
     return { accessToken, refreshToken };
+  }
+
+  /**
+   * Проверяет email + пароль и выпускает пару токенов при успешной аутентификации.
+   *
+   * @param dto — `{ email, password }` из тела запроса.
+   * @returns Пара `accessToken` и `refreshToken`.
+   * @throws {@link UnauthorizedException} при неверных учётных данных.
+   */
+  async login(
+    dto: LoginDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const user = await this.usersRepository.findOne({
+      where: { email: dto.email },
+    });
+    const isPasswordValid =
+      user !== null && (await bcrypt.compare(dto.password, user.passwordHash));
+    if (!user || !isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    return this.issueTokenPair(user);
+  }
+
+  /**
+   * Инвалидирует refresh токен пользователя, записывая `null` в `users.refresh_token`.
+   *
+   * @param userId — идентификатор аутентифицированного пользователя.
+   */
+  async logout(userId: number): Promise<void> {
+    await this.usersRepository.update(userId, { refreshToken: null });
   }
 
   /**
