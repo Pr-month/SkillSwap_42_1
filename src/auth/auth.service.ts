@@ -1,10 +1,17 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { appConfiguration, TAppConfig } from '../config/app-configuration';
 import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
 import { User } from '../users/entities/user.entity';
+import { PublicUser, UsersService } from '../users/users.service';
 import { JwtPayload, REFRESH_JWT_TYPE, RefreshAuthUser } from './auth.types';
+import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
@@ -19,7 +26,32 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly usersService: UsersService,
   ) {}
+
+  async register(dto: RegisterDto): Promise<{
+    user: PublicUser;
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const existing = await this.usersService.findByEmail(dto.email);
+    if (existing) {
+      throw new ConflictException('Пользователь с таким email уже существует');
+    }
+
+    const passwordHash = await this.hashPassword(dto.password);
+    const user = await this.usersService.create(dto, passwordHash);
+
+    const fullUser = await this.usersRepository.findOne({
+      where: { id: user.id },
+    });
+    const tokens = await this.issueTokenPair(fullUser!);
+
+    return {
+      user,
+      ...tokens,
+    };
+  }
 
   /**
    * Хеширует пароль перед сохранением в БД.

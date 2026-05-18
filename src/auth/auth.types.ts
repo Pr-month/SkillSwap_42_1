@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { PublicUser } from '../users/users.service';
 
 export interface JwtPayload {
   /** Идентификатор пользователя (`users.id`). */
@@ -32,4 +33,15 @@ export interface RefreshAuthUser {
 
 export interface RefreshAuthenticatedRequest extends Request {
   user: RefreshAuthUser;
+}
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RegisterResult {
+  user: PublicUser;
+  accessToken: string;
+  refreshToken: string;
 }

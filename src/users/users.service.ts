@@ -5,6 +5,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
+export type PublicUser = Omit<User, 'passwordHash' | 'refreshToken'>;
+
+function toPublicUser(user: User): PublicUser {
+  const { passwordHash: _ph, refreshToken: _rt, ...rest } = user;
+  return rest;
+}
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -12,9 +19,17 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    const user = this.usersRepository.create(createUserDto as Partial<User>);
-    return this.usersRepository.save(user);
+  async create(dto: CreateUserDto, passwordHash: string) {
+    const user = this.usersRepository.create({
+      ...dto,
+      passwordHash,
+    } as Partial<User>);
+    const saved = await this.usersRepository.save(user);
+    return toPublicUser(saved);
+  }
+
+  findByEmail(email: string) {
+    return this.usersRepository.findOne({ where: { email } });
   }
 
   findAll() {
