@@ -1,6 +1,7 @@
 import {
   IsDateString,
   IsEmail,
+  IsEnum,
   IsIn,
   IsNumber,
   IsOptional,
@@ -8,6 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { UserRole } from '../enums/user-role.enum';
 
 export class CreateUserDto {
   @IsString()
@@ -45,6 +47,6 @@ export class CreateUserDto {
   cityId?: number;
 
   @IsOptional()
-  @IsNumber()
-  roleId?: number;
+  @IsEnum(UserRole)
+  role?: UserRole;
 }

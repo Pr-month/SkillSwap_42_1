@@ -1,16 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { instanceToPlain } from 'class-transformer';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
-import { NotFoundException } from '@nestjs/common';
+import { User, UserSerializeGroup } from './entities/user.entity';
 
-export type PublicUser = Omit<User, 'passwordHash' | 'refreshToken'>;
+export type PublicUser = Omit<
+  User,
+  'passwordHash' | 'refreshToken' | 'skills' | 'wantToLearn' | 'favoriteSkills'
+>;
 
-function toPublicUser(user: User): PublicUser {
-  const { passwordHash: _ph, refreshToken: _rt, ...rest } = user;
-  return rest;
+function serializeUser(
+  user: User,
+  groups: (typeof UserSerializeGroup)[keyof typeof UserSerializeGroup][],
+): PublicUser {
+  return instanceToPlain(user, { groups }) as PublicUser;
 }
 
 @Injectable()
@@ -26,7 +31,10 @@ export class UsersService {
       passwordHash,
     } as Partial<User>);
     const saved = await this.usersRepository.save(user);
-    return toPublicUser(saved);
+    return serializeUser(saved, [
+      UserSerializeGroup.Public,
+      UserSerializeGroup.Me,
+    ]);
   }
 
   findByEmail(email: string) {
@@ -34,38 +42,21 @@ export class UsersService {
   }
 
   async findMe(id: number) {
-    const user = await this.usersRepository.findOne({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        about: true,
-        birthDate: true,
-        gender: true,
-        avatar: true,
-        cityId: true,
-        roleId: true,
-      },
-    });
+    const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user;
+    return serializeUser(user, [
+      UserSerializeGroup.Public,
+      UserSerializeGroup.Me,
+    ]);
   }
 
-  findAll() {
-    return this.usersRepository.find({
-      select: {
-        id: true,
-        name: true,
-        about: true,
-        birthDate: true,
-        gender: true,
-        avatar: true,
-        cityId: true,
-      },
-    });
+  async findAll() {
+    const users = await this.usersRepository.find();
+    return users.map((user) =>
+      serializeUser(user, [UserSerializeGroup.Public]),
+    );
   }
 
   findOne(id: number) {
