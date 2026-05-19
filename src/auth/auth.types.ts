@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { PublicUser } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
 
 export interface JwtPayload {
   /** Идентификатор пользователя (`users.id`). */
@@ -41,7 +41,7 @@ export interface TokenPair {
 }
 
 export interface RegisterResult {
-  user: PublicUser;
+  user: User;
   accessToken: string;
   refreshToken: string;
 }

@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
-import { UsersService, PublicUser } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -39,15 +39,10 @@ function buildUser(overrides: Partial<User> = {}): User {
   return { ...defaults, ...overrides };
 }
 
-function buildPublicUser(overrides: Partial<User> = {}): PublicUser {
-  const { passwordHash: _, refreshToken: __, ...rest } = buildUser(overrides);
-  return rest;
-}
-
 function createUsersServiceMock() {
   return {
     findByEmail: jest.fn<Promise<User | null>, [string]>(),
-    create: jest.fn<Promise<PublicUser>, [CreateUserDto, string]>(),
+    create: jest.fn<Promise<User>, [CreateUserDto, string]>(),
   };
 }
 
@@ -110,7 +105,7 @@ describe('AuthService', () => {
     it('должен создать пользователя и вернуть user + токены', async () => {
       usersServiceMock.findByEmail.mockResolvedValue(null);
       usersServiceMock.create.mockResolvedValue(
-        buildPublicUser({ id: 1, name: dto.name, email: dto.email }),
+        buildUser({ id: 1, name: dto.name, email: dto.email }),
       );
       repoMock.findOne.mockResolvedValue(
         buildUser({ id: 1, email: dto.email, roleId: 1 }),

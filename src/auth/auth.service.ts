@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { appConfiguration, TAppConfig } from '../config/app-configuration';
 import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
 import { User } from '../users/entities/user.entity';
-import { PublicUser, UsersService } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 import { JwtPayload, REFRESH_JWT_TYPE, RefreshAuthUser } from './auth.types';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,7 +30,7 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<{
-    user: PublicUser;
+    user: User;
     accessToken: string;
     refreshToken: string;
   }> {

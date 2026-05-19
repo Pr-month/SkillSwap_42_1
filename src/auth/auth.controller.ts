@@ -1,10 +1,18 @@
-import { Controller, Post, HttpCode, HttpStatus, Body, UseGuards, Req } from "@nestjs/common";
-import { AuthService } from "./auth.service";
-import { AuthenticatedRequest, RefreshAuthUser } from "./auth.types";
-import { LoginDto } from "./dto/login.dto";
-import { RegisterDto } from "./dto/register.dto";
-import { AccessTokenGuard } from "./guards/access-token.guard";
-import { RefreshTokenGuard } from "./guards/refresh-token.guard";
+import {
+  Controller,
+  Post,
+  HttpCode,
+  HttpStatus,
+  Body,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { AuthenticatedRequest, RefreshAuthUser } from './auth.types';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { AccessTokenGuard } from './guards/access-token.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
 @Controller('auth')
 export class AuthController {

@@ -6,13 +6,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { NotFoundException } from '@nestjs/common';
 
-export type PublicUser = Omit<User, 'passwordHash' | 'refreshToken'>;
-
-function toPublicUser(user: User): PublicUser {
-  const { passwordHash: _ph, refreshToken: _rt, ...rest } = user;
-  return rest;
-}
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -25,8 +18,7 @@ export class UsersService {
       ...dto,
       passwordHash,
     } as Partial<User>);
-    const saved = await this.usersRepository.save(user);
-    return toPublicUser(saved);
+    return this.usersRepository.save(user);
   }
 
   findByEmail(email: string) {
