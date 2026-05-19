@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { Skill } from '../../skills/entities/skill.entity';
+import { UserGender } from '../enums/user-gender.enum';
 import { UserRole } from '../enums/user-role.enum';
 
 export const UserSerializeGroup = {
@@ -44,8 +45,12 @@ export class User {
   birthDate: string | null;
 
   @Expose({ groups: [UserSerializeGroup.Public, UserSerializeGroup.Me] })
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  gender: string | null;
+  @Column({
+    type: 'enum',
+    enum: UserGender,
+    nullable: true,
+  })
+  gender: UserGender | null;
 
   @Expose({ groups: [UserSerializeGroup.Public, UserSerializeGroup.Me] })
   @Column({ type: 'varchar', length: 500, nullable: true })

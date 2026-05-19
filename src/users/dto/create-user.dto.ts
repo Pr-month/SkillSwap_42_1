@@ -2,13 +2,13 @@ import {
   IsDateString,
   IsEmail,
   IsEnum,
-  IsIn,
   IsNumber,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { UserGender } from '../enums/user-gender.enum';
 import { UserRole } from '../enums/user-role.enum';
 
 export class CreateUserDto {
@@ -34,8 +34,8 @@ export class CreateUserDto {
   birthDate?: string;
 
   @IsOptional()
-  @IsIn(['male', 'female', 'all'])
-  gender?: string;
+  @IsEnum(UserGender)
+  gender?: UserGender;
 
   @IsOptional()
   @IsString()
