@@ -2,11 +2,11 @@ import {
   Controller,
   Post,
   HttpCode,
+  HttpStatus,
   Body,
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { HTTP_STATUS_CODE } from '../common/constants/http-status-code.constant';
 import { AuthService } from './auth.service';
 import { AuthenticatedRequest, RefreshAuthUser } from './auth.types';
 import { LoginDto } from './dto/login.dto';

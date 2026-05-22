@@ -6,18 +6,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserSerializeGroup } from './entities/user.entity';
 
-export type PublicUser = Omit<
-  User,
-  'passwordHash' | 'refreshToken' | 'skills' | 'wantToLearn' | 'favoriteSkills'
->;
-
-function serializeUser(
-  user: User,
-  groups: (typeof UserSerializeGroup)[keyof typeof UserSerializeGroup][],
-): PublicUser {
-  return instanceToPlain(user, { groups }) as PublicUser;
-}
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -30,11 +18,7 @@ export class UsersService {
       ...dto,
       passwordHash,
     } as Partial<User>);
-    const saved = await this.usersRepository.save(user);
-    return serializeUser(saved, [
-      UserSerializeGroup.Public,
-      UserSerializeGroup.Me,
-    ]);
+    return this.usersRepository.save(user);
   }
 
   findByEmail(email: string) {
