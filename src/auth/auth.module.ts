@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
 import { UsersModule } from '../users/users.module';
+import { FilesModule } from '../files/files.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AccessTokenGuard } from './guards/access-token.guard';
@@ -17,6 +18,7 @@ import { User } from '../users/entities/user.entity';
   imports: [
     TypeOrmModule.forFeature([User]),
     UsersModule,
+    FilesModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

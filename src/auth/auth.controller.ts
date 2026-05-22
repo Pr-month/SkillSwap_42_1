@@ -5,6 +5,8 @@ import {
   Body,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthenticatedRequest, RefreshAuthUser } from './auth.types';
@@ -13,6 +15,8 @@ import { RegisterDto } from './dto/register.dto';
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { HTTP_STATUS_CODE } from '../common/constants/http-status-code.constant';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { imageUploadOptions } from '../files/image-upload.options';
 
 @Controller('auth')
 export class AuthController {
@@ -32,8 +36,12 @@ export class AuthController {
   }
 
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  @UseInterceptors(FileInterceptor('avatar', imageUploadOptions))
+  register(
+    @Body() dto: RegisterDto,
+    @UploadedFile() avatar?: Express.Multer.File,
+  ) {
+    return this.authService.register(dto, avatar);
   }
 
   @Post('refresh')
