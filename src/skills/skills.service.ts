@@ -12,8 +12,15 @@ export class SkillsService {
     private readonly skillsRepository: Repository<Skill>,
   ) {}
 
-  async create(createSkillDto: CreateSkillDto) {
-    const skill = this.skillsRepository.create(createSkillDto);
+  async create(userId: number, createSkillDto: CreateSkillDto) {
+    const skill = this.skillsRepository.create({
+      title: createSkillDto.title,
+      description: createSkillDto.description,
+      images: createSkillDto.images || [],
+      category: { id: createSkillDto.categoryId } as any,
+      owner: { id: userId } as any,
+    });
+
     return this.skillsRepository.save(skill);
   }
 
