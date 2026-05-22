@@ -19,13 +19,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HTTP_STATUS_CODE.OK)
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Post('logout')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HTTP_STATUS_CODE.OK)
   @UseGuards(AccessTokenGuard)
   logout(@Req() req: AuthenticatedRequest) {
     return this.authService.logout(req.user.sub);
@@ -37,7 +37,7 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @HttpCode(200)
+  @HttpCode(HTTP_STATUS_CODE.OK)
   @UseGuards(RefreshTokenGuard)
   refresh(@Req() req: Request & { user: RefreshAuthUser }) {
     return this.authService.refreshSession(req.user);

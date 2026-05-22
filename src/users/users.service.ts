@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { instanceToPlain } from 'class-transformer';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
-import { NotFoundException } from '@nestjs/common';
+import { User, UserSerializeGroup } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -26,38 +26,21 @@ export class UsersService {
   }
 
   async findMe(id: number) {
-    const user = await this.usersRepository.findOne({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        about: true,
-        birthDate: true,
-        gender: true,
-        avatar: true,
-        cityId: true,
-        roleId: true,
-      },
-    });
+    const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user;
+    return serializeUser(user, [
+      UserSerializeGroup.Public,
+      UserSerializeGroup.Me,
+    ]);
   }
 
-  findAll() {
-    return this.usersRepository.find({
-      select: {
-        id: true,
-        name: true,
-        about: true,
-        birthDate: true,
-        gender: true,
-        avatar: true,
-        cityId: true,
-      },
-    });
+  async findAll() {
+    const users = await this.usersRepository.find();
+    return users.map((user) =>
+      serializeUser(user, [UserSerializeGroup.Public]),
+    );
   }
 
   findOne(id: number) {

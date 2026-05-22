@@ -5,8 +5,7 @@ export interface JwtPayload {
   /** Идентификатор пользователя (`users.id`). */
   sub: number;
   email: string;
-  /** Значение `users.role_id`. */
-  role: number;
+  role: UserRole;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -20,7 +19,7 @@ export const REFRESH_JWT_TYPE = 'refresh' as const;
 export interface RefreshJwtPayload {
   sub: number;
   email: string;
-  role: number;
+  role: UserRole;
   type: typeof REFRESH_JWT_TYPE;
 }
 
@@ -28,7 +27,7 @@ export interface RefreshJwtPayload {
 export interface RefreshAuthUser {
   id: number;
   email: string;
-  role: number;
+  role: UserRole;
 }
 
 export interface RefreshAuthenticatedRequest extends Request {
