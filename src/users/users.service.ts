@@ -6,6 +6,10 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserSerializeGroup } from './entities/user.entity';
 
+function serializeUser(user: User, groups: string[]): Partial<User> {
+  return instanceToPlain(user, { groups }) as Partial<User>;
+}
+
 @Injectable()
 export class UsersService {
   constructor(

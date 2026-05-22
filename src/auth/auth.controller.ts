@@ -2,7 +2,6 @@ import {
   Controller,
   Post,
   HttpCode,
-  HttpStatus,
   Body,
   UseGuards,
   Req,
@@ -13,6 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { HTTP_STATUS_CODE } from '../common/constants/http-status-code.constant';
 
 @Controller('auth')
 export class AuthController {
