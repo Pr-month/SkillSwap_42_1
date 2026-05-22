@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { appConfiguration, TAppConfig } from '../config/app-configuration';
 import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
 import { User } from '../users/entities/user.entity';
-import { PublicUser, UsersService } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 import { JwtPayload, REFRESH_JWT_TYPE, RefreshAuthUser } from './auth.types';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,7 +30,7 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<{
-    user: PublicUser;
+    user: User;
     accessToken: string;
     refreshToken: string;
   }> {
@@ -80,7 +80,7 @@ export class AuthService {
    * Выпускает пару access и refresh токенов и обновляет хеш refresh в БД для пользователя.
    * Используется после успешного логина или регистрации или при ротации refresh JWT.
    *
-   * @param user - Сущность пользователя (нужны `id`, `email`, `roleId`).
+   * @param user - Сущность пользователя (нужны `id`, `email`, `role`).
    * @returns Объект с полями `accessToken` и `refreshToken` (сырые токены для ответа клиенту / куки).
    */
   async issueTokenPair(user: User): Promise<{
@@ -151,7 +151,7 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
-      role: user.roleId,
+      role: user.role,
     };
     return this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.accessSecret,
@@ -170,7 +170,7 @@ export class AuthService {
       {
         sub: user.id,
         email: user.email,
-        role: user.roleId,
+        role: user.role,
         type: REFRESH_JWT_TYPE,
       },
       {

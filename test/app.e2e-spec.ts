@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
+import { HTTP_STATUS_CODE } from '../src/common/constants/http-status-code.constant';
 import { AppModule } from './../src/app.module';
 
 describe('AppController (e2e)', () => {
@@ -19,7 +20,7 @@ describe('AppController (e2e)', () => {
   it('/ (GET)', () => {
     return request(app.getHttpServer())
       .get('/')
-      .expect(200)
+      .expect(HTTP_STATUS_CODE.OK)
       .expect('Hello World!');
   });
 });
