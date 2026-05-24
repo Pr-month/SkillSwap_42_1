@@ -14,8 +14,7 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
-import { JwtPayload } from 'src/auth/auth.types';
-import { Request } from 'express';
+import { AuthenticatedRequest } from 'src/auth/auth.types';
 
 @Controller('users')
 export class UsersController {
@@ -23,13 +22,14 @@ export class UsersController {
 
   @Get('me')
   @UseGuards(AccessTokenGuard)
-  async findMe(@Req() req: Request & { user: JwtPayload }) {
+  async findMe(@Req() req: AuthenticatedRequest) {
     return await this.usersService.findMe(req.user.sub);
   }
+
   @Patch('me')
   @UseGuards(AccessTokenGuard)
   async updateMe(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: AuthenticatedRequest,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.update(req.user.sub, updateUserDto);
@@ -39,7 +39,7 @@ export class UsersController {
   @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
   async updatePassword(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: AuthenticatedRequest,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     await this.usersService.updatePassword(
