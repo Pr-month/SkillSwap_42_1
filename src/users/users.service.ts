@@ -11,23 +11,10 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { User, UserSerializeGroup } from './entities/user.entity';
 import { appConfiguration, TAppConfig } from '../config/app-configuration';
 
 export type PublicUser = Omit<User, 'passwordHash' | 'refreshToken'>;
-
-function toPublicUser(user: User): PublicUser {
-  const { passwordHash: _ph, refreshToken: _rt, ...rest } = user;
-  return rest;
-}
-
-function serializeUser(user: User, groups: string[]): Partial<User> {
-  return instanceToPlain(user, { groups }) as Partial<User>;
-}
-
-function serializeUser(user: User, groups: string[]): Partial<User> {
-  return instanceToPlain(user, { groups }) as Partial<User>;
-}
 
 @Injectable()
 export class UsersService {
@@ -55,16 +42,13 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return serializeUser(user, [
-      UserSerializeGroup.Public,
-      UserSerializeGroup.Me,
-    ]);
+    return user;
   }
 
   async findAll() {
     const users = await this.usersRepository.find();
     return users.map((user) =>
-      serializeUser(user, [UserSerializeGroup.Public]),
+      instanceToPlain(user, { groups: [UserSerializeGroup.Public] }),
     );
   }
 
