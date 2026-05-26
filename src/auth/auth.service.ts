@@ -15,6 +15,7 @@ import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class AuthService {
@@ -27,9 +28,13 @@ export class AuthService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly usersService: UsersService,
+    private readonly filesService: FilesService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{
+  async register(
+    dto: RegisterDto,
+    avatarFile?: Express.Multer.File,
+  ): Promise<{
     user: User;
     accessToken: string;
     refreshToken: string;
@@ -40,7 +45,13 @@ export class AuthService {
     }
 
     const passwordHash = await this.hashPassword(dto.password);
-    const user = await this.usersService.create(dto, passwordHash);
+    const avatarUrl = avatarFile
+      ? this.filesService.getPublicUrl(avatarFile.filename)
+      : dto.avatar;
+    const user = await this.usersService.create(
+      { ...dto, avatar: avatarUrl },
+      passwordHash,
+    );
 
     const fullUser = await this.usersRepository.findOne({
       where: { id: user.id },

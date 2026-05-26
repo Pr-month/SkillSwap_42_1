@@ -41,10 +41,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = 'Duplicate entry';
     }
 
-    this.logger.error(
-      `${request.method} ${request.url} ${status} - ${message}`,
-      exception instanceof Error ? exception.stack : undefined,
-    );
+    if (process.env.NODE_ENV !== 'test') {
+      this.logger.error(
+        `${request.method} ${request.url} ${status} - ${message}`,
+        exception instanceof Error ? exception.stack : undefined,
+      );
+    }
 
     response.status(status).json({ statusCode: status, message });
   }
