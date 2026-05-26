@@ -82,7 +82,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
     return {
       id: user.id,
       email: user.email,
-      role: user.roleId,
+      role: user.role,
     };
   }
 }
