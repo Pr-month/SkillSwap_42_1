@@ -25,6 +25,10 @@ function serializeUser(user: User, groups: string[]): Partial<User> {
   return instanceToPlain(user, { groups }) as Partial<User>;
 }
 
+function serializeUser(user: User, groups: string[]): Partial<User> {
+  return instanceToPlain(user, { groups }) as Partial<User>;
+}
+
 @Injectable()
 export class UsersService {
   constructor(
