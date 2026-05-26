@@ -4,8 +4,10 @@ import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
-import { UsersService, PublicUser } from '../users/users.service';
+import { FilesService } from '../files/files.service';
+import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
+import { UserRole } from '../users/enums/user-role.enum';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { RegisterDto } from './dto/register.dto';
 import { appConfiguration } from '../config/app-configuration';
@@ -32,22 +34,20 @@ function buildUser(overrides: Partial<User> = {}): User {
     gender: null,
     avatar: null,
     cityId: null,
-    roleId: 1,
+    role: UserRole.USER,
     refreshToken: null,
     registrationDate: new Date('2026-01-01'),
+    skills: [],
+    wantToLearn: [],
+    favoriteSkills: [],
   };
   return { ...defaults, ...overrides };
-}
-
-function buildPublicUser(overrides: Partial<User> = {}): PublicUser {
-  const { passwordHash: _, refreshToken: __, ...rest } = buildUser(overrides);
-  return rest;
 }
 
 function createUsersServiceMock() {
   return {
     findByEmail: jest.fn<Promise<User | null>, [string]>(),
-    create: jest.fn<Promise<PublicUser>, [CreateUserDto, string]>(),
+    create: jest.fn<Promise<User>, [CreateUserDto, string]>(),
   };
 }
 
@@ -88,6 +88,10 @@ describe('AuthService', () => {
         { provide: jwtConfiguration.KEY, useValue: mockJwtConfig },
         { provide: JwtService, useValue: jwtServiceMock },
         { provide: getRepositoryToken(User), useValue: repoMock },
+        {
+          provide: FilesService,
+          useValue: { getPublicUrl: (f: string) => `/public/uploads/${f}` },
+        },
       ],
     }).compile();
 
@@ -110,10 +114,10 @@ describe('AuthService', () => {
     it('должен создать пользователя и вернуть user + токены', async () => {
       usersServiceMock.findByEmail.mockResolvedValue(null);
       usersServiceMock.create.mockResolvedValue(
-        buildPublicUser({ id: 1, name: dto.name, email: dto.email }),
+        buildUser({ id: 1, name: dto.name, email: dto.email }),
       );
       repoMock.findOne.mockResolvedValue(
-        buildUser({ id: 1, email: dto.email, roleId: 1 }),
+        buildUser({ id: 1, email: dto.email, role: UserRole.USER }),
       );
       jwtServiceMock.signAsync
         .mockResolvedValueOnce('access-tok')
@@ -125,7 +129,7 @@ describe('AuthService', () => {
 
       expect(usersServiceMock.create).toHaveBeenCalledTimes(1);
       const [argsDto, argsPasswordHash] = usersServiceMock.create.mock.calls[0];
-      expect(argsDto).toBe(dto);
+      expect(argsDto).toEqual({ ...dto, avatar: undefined });
       expect(argsPasswordHash).not.toBe(dto.password);
       expect(typeof argsPasswordHash).toBe('string');
       expect(argsPasswordHash.length).toBeGreaterThan(0);
@@ -177,7 +181,7 @@ describe('AuthService', () => {
 
   describe('issueTokenPair', () => {
     it('должен подписать оба токена и сохранить хеш refresh в БД', async () => {
-      const user = buildUser({ id: 1, email: 't@t.com', roleId: 1 });
+      const user = buildUser({ id: 1, email: 't@t.com', role: UserRole.USER });
 
       jwtServiceMock.signAsync
         .mockResolvedValueOnce('access-token')
@@ -194,13 +198,13 @@ describe('AuthService', () => {
 
       expect(jwtServiceMock.signAsync).toHaveBeenNthCalledWith(
         1,
-        { sub: 1, email: 't@t.com', role: 1 },
+        { sub: 1, email: 't@t.com', role: UserRole.USER },
         { secret: mockJwtConfig.accessSecret, expiresIn: '1h' },
       );
 
       expect(jwtServiceMock.signAsync).toHaveBeenNthCalledWith(
         2,
-        { sub: 1, email: 't@t.com', role: 1, type: 'refresh' },
+        { sub: 1, email: 't@t.com', role: UserRole.USER, type: 'refresh' },
         { secret: mockJwtConfig.refreshSecret, expiresIn: '7d' },
       );
 
@@ -215,7 +219,7 @@ describe('AuthService', () => {
   describe('refreshSession', () => {
     it('должен вернуть новую пару токенов для существующего пользователя', async () => {
       repoMock.findOne.mockResolvedValue(
-        buildUser({ id: 1, email: 't@t.com', roleId: 1 }),
+        buildUser({ id: 1, email: 't@t.com', role: UserRole.USER }),
       );
       jwtServiceMock.signAsync
         .mockResolvedValueOnce('new-access')
@@ -224,7 +228,7 @@ describe('AuthService', () => {
       const result = await service.refreshSession({
         id: 1,
         email: 't@t.com',
-        role: 1,
+        role: UserRole.USER,
       });
 
       expect(repoMock.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
@@ -239,7 +243,11 @@ describe('AuthService', () => {
       repoMock.findOne.mockResolvedValue(null);
 
       await expect(
-        service.refreshSession({ id: 999, email: 'x@x.com', role: 1 }),
+        service.refreshSession({
+          id: 999,
+          email: 'x@x.com',
+          role: UserRole.USER,
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
   });

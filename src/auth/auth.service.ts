@@ -9,12 +9,13 @@ import * as bcrypt from 'bcrypt';
 import { appConfiguration, TAppConfig } from '../config/app-configuration';
 import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
 import { User } from '../users/entities/user.entity';
-import { PublicUser, UsersService } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 import { JwtPayload, REFRESH_JWT_TYPE, RefreshAuthUser } from './auth.types';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class AuthService {
@@ -27,10 +28,14 @@ export class AuthService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly usersService: UsersService,
+    private readonly filesService: FilesService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{
-    user: PublicUser;
+  async register(
+    dto: RegisterDto,
+    avatarFile?: Express.Multer.File,
+  ): Promise<{
+    user: User;
     accessToken: string;
     refreshToken: string;
   }> {
@@ -40,7 +45,13 @@ export class AuthService {
     }
 
     const passwordHash = await this.hashPassword(dto.password);
-    const user = await this.usersService.create(dto, passwordHash);
+    const avatarUrl = avatarFile
+      ? this.filesService.getPublicUrl(avatarFile.filename)
+      : dto.avatar;
+    const user = await this.usersService.create(
+      { ...dto, avatar: avatarUrl },
+      passwordHash,
+    );
 
     const fullUser = await this.usersRepository.findOne({
       where: { id: user.id },
@@ -80,7 +91,7 @@ export class AuthService {
    * Выпускает пару access и refresh токенов и обновляет хеш refresh в БД для пользователя.
    * Используется после успешного логина или регистрации или при ротации refresh JWT.
    *
-   * @param user - Сущность пользователя (нужны `id`, `email`, `roleId`).
+   * @param user - Сущность пользователя (нужны `id`, `email`, `role`).
    * @returns Объект с полями `accessToken` и `refreshToken` (сырые токены для ответа клиенту / куки).
    */
   async issueTokenPair(user: User): Promise<{
@@ -151,7 +162,7 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
-      role: user.roleId,
+      role: user.role,
     };
     return this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.accessSecret,
@@ -170,7 +181,7 @@ export class AuthService {
       {
         sub: user.id,
         email: user.email,
-        role: user.roleId,
+        role: user.role,
         type: REFRESH_JWT_TYPE,
       },
       {

@@ -1,12 +1,12 @@
 import { Request } from 'express';
-import { PublicUser } from '../users/users.service';
+import { UserRole } from '../users/enums/user-role.enum';
+import { User } from '../users/entities/user.entity';
 
 export interface JwtPayload {
   /** Идентификатор пользователя (`users.id`). */
   sub: number;
   email: string;
-  /** Значение `users.role_id`. */
-  role: number;
+  role: UserRole;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -20,7 +20,7 @@ export const REFRESH_JWT_TYPE = 'refresh' as const;
 export interface RefreshJwtPayload {
   sub: number;
   email: string;
-  role: number;
+  role: UserRole;
   type: typeof REFRESH_JWT_TYPE;
 }
 
@@ -28,7 +28,7 @@ export interface RefreshJwtPayload {
 export interface RefreshAuthUser {
   id: number;
   email: string;
-  role: number;
+  role: UserRole;
 }
 
 export interface RefreshAuthenticatedRequest extends Request {
@@ -41,7 +41,7 @@ export interface TokenPair {
 }
 
 export interface RegisterResult {
-  user: PublicUser;
+  user: User;
   accessToken: string;
   refreshToken: string;
 }
