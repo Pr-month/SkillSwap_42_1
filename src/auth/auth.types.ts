@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { UserRole } from '../users/enums/user-role.enum';
 import { User } from '../users/entities/user.entity';
 
 export interface JwtPayload {

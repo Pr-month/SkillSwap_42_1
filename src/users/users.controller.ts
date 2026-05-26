@@ -12,6 +12,10 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AccessTokenGuard } from '../auth/guards/access-token.guard';
+import { JwtPayload } from '../auth/auth.types';
+import { UseGuards, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { AuthenticatedRequest } from 'src/auth/auth.types';
