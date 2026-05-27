@@ -4,9 +4,11 @@ import {
   JoinColumn,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
+import { Request } from '../../requests/entities/request.entity';
 import { User } from '../../users/entities/user.entity';
 
 @Entity({ name: 'skills' })
@@ -35,4 +37,10 @@ export class Skill {
 
   @ManyToMany(() => User, (user) => user.favoriteSkills)
   favoritedBy: User[];
+
+  @OneToMany(() => Request, (request) => request.offeredSkill)
+  offeredInRequests: Request[];
+
+  @OneToMany(() => Request, (request) => request.requestedSkill)
+  requestedInRequests: Request[];
 }
