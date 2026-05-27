@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
+import { Request } from '../../requests/entities/request.entity';
 import { Skill } from '../../skills/entities/skill.entity';
 import { UserGender } from '../enums/user-gender.enum';
 import { UserRole } from '../enums/user-role.enum';
@@ -84,6 +85,14 @@ export class User {
   @Exclude()
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills: Skill[];
+
+  @Exclude()
+  @OneToMany(() => Request, (request) => request.sender)
+  sentRequests: Request[];
+
+  @Exclude()
+  @OneToMany(() => Request, (request) => request.receiver)
+  receivedRequests: Request[];
 
   @Exclude()
   @ManyToMany(() => Category, (category) => category.usersWantToLearn)
