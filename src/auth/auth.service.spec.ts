@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
+import { FilesService } from '../files/files.service';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/enums/user-role.enum';
@@ -39,6 +40,8 @@ function buildUser(overrides: Partial<User> = {}): User {
     skills: [],
     wantToLearn: [],
     favoriteSkills: [],
+    sentRequests: [],
+    receivedRequests: [],
   };
   return { ...defaults, ...overrides };
 }
@@ -87,6 +90,10 @@ describe('AuthService', () => {
         { provide: jwtConfiguration.KEY, useValue: mockJwtConfig },
         { provide: JwtService, useValue: jwtServiceMock },
         { provide: getRepositoryToken(User), useValue: repoMock },
+        {
+          provide: FilesService,
+          useValue: { getPublicUrl: (f: string) => `/public/uploads/${f}` },
+        },
       ],
     }).compile();
 
@@ -124,7 +131,7 @@ describe('AuthService', () => {
 
       expect(usersServiceMock.create).toHaveBeenCalledTimes(1);
       const [argsDto, argsPasswordHash] = usersServiceMock.create.mock.calls[0];
-      expect(argsDto).toBe(dto);
+      expect(argsDto).toEqual({ ...dto, avatar: undefined });
       expect(argsPasswordHash).not.toBe(dto.password);
       expect(typeof argsPasswordHash).toBe('string');
       expect(argsPasswordHash.length).toBeGreaterThan(0);

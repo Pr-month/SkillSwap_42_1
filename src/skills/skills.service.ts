@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { PaginationDto } from './dto/pagination.dto';
 import { Skill } from './entities/skill.entity';
 import { Category } from 'src/categories/entities/category.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -38,8 +39,24 @@ export class SkillsService {
     return await this.skillsRepository.save(skill);
   }
 
-  findAll() {
-    return this.skillsRepository.find();
+  async findAll(paginationDto: PaginationDto) {
+    const page = paginationDto.page ?? 1;
+    const limit = paginationDto.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.skillsRepository
+      .createQueryBuilder('skill')
+      .skip(skip)
+      .take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    if (page > totalPages && total > 0) {
+      throw new NotFoundException('Page not found');
+    }
+
+    return { data, page, totalPages };
   }
 
   async findOne(id: number) {
