@@ -13,7 +13,7 @@ import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
-import { JwtPayload } from 'src/auth/auth.types';
+import { AuthenticatedRequest } from 'src/auth/auth.types';
 
 @Controller('skills')
 export class SkillsController {
@@ -22,7 +22,7 @@ export class SkillsController {
   @UseGuards(AccessTokenGuard)
   @Post()
   create(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: AuthenticatedRequest,
     @Body() createSkillDto: CreateSkillDto,
   ) {
     return this.skillsService.create(req.user.sub, createSkillDto);

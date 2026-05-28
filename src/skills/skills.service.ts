@@ -19,29 +19,23 @@ export class SkillsService {
   ) {}
 
   async create(userId: number, createSkillDto: CreateSkillDto) {
-    try {
-      const category = await this.categoryRepository.findOneByOrFail({
-        id: createSkillDto.categoryId,
-      });
+    const category = await this.categoryRepository.findOneByOrFail({
+      id: createSkillDto.categoryId,
+    });
 
-      const owner = await this.userRepository.findOneByOrFail({
-        id: userId,
-      });
+    const owner = await this.userRepository.findOneByOrFail({
+      id: userId,
+    });
 
-      const skill = this.skillsRepository.create({
-        title: createSkillDto.title,
-        description: createSkillDto.description,
-        images: createSkillDto.images || [],
-        category: category,
-        owner: owner,
-      });
+    const skill = this.skillsRepository.create({
+      title: createSkillDto.title,
+      description: createSkillDto.description,
+      images: createSkillDto.images || [],
+      category: category,
+      owner: owner,
+    });
 
-      return await this.skillsRepository.save(skill);
-    } catch {
-      throw new NotFoundException(
-        'Не удалось создать навык: указанная категория или пользователь не найдены',
-      );
-    }
+    return await this.skillsRepository.save(skill);
   }
 
   findAll() {
