@@ -17,8 +17,23 @@ export class RequestsService {
     return this.requestsRepository.save(request);
   }
 
-  async findAll() {
-    return this.requestsRepository.find();
+  async findIncoming(userId: number) {
+    return this.requestsRepository.find({
+      where: {
+        receiver: {
+          id: userId,
+        },
+      },
+      relations: {
+        sender: true,
+        receiver: true,
+        offeredSkill: true,
+        requestedSkill: true,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 
   async findOne(id: number) {
