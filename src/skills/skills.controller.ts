@@ -6,20 +6,28 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Req,
   Query,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
+import { AuthenticatedRequest } from 'src/auth/auth.types';
 import { PaginationDto } from './dto/pagination.dto';
 
 @Controller('skills')
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
 
+  @UseGuards(AccessTokenGuard)
   @Post()
-  create(@Body() createSkillDto: CreateSkillDto) {
-    return this.skillsService.create(createSkillDto);
+  create(
+    @Req() req: AuthenticatedRequest,
+    @Body() createSkillDto: CreateSkillDto,
+  ) {
+    return this.skillsService.create(req.user.sub, createSkillDto);
   }
 
   @Get()
