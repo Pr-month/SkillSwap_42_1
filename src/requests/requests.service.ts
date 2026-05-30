@@ -91,8 +91,8 @@ export class RequestsService {
   }
 
   async update(id: number, updateRequestDto: UpdateRequestDto) {
-    await this.requestsRepository.update(id, updateRequestDto);
-    return this.findOne(id);
+    // await this.requestsRepository.update(id, updateRequestDto);
+    // return this.findOne(id);
   }
 
   async remove(id: number) {

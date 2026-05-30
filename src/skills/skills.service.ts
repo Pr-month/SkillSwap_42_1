@@ -119,7 +119,7 @@ export class SkillsService {
       where: { id },
     });
 
-    const user = await this.usersRepository.findOneOrFail({
+    const user = await this.userRepository.findOneOrFail({
       where: { id: userId },
       relations: ['favoriteSkills'],
     });
@@ -127,7 +127,7 @@ export class SkillsService {
     const isAlreadyFavorite = user.favoriteSkills.some((s) => s.id === id);
     if (!isAlreadyFavorite) {
       user.favoriteSkills.push(skill);
-      await this.usersRepository.save(user);
+      await this.userRepository.save(user);
     }
     return { success: true };
   }
@@ -137,13 +137,13 @@ export class SkillsService {
       where: { id },
     });
 
-    const user = await this.usersRepository.findOneOrFail({
+    const user = await this.userRepository.findOneOrFail({
       where: { id: userId },
       relations: ['favoriteSkills'],
     });
 
     user.favoriteSkills = user.favoriteSkills.filter((s) => s.id !== id);
-    await this.usersRepository.save(user);
+    await this.userRepository.save(user);
     return { success: true };
   }
 }

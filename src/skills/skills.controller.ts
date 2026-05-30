@@ -6,8 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
-  Req,
   Query,
   UseGuards,
   Req,
@@ -18,8 +16,7 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { AuthenticatedRequest } from 'src/auth/auth.types';
 import { PaginationDto } from './dto/pagination.dto';
-import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
-import { AuthenticatedRequest } from 'src/auth/auth.types';
+
 
 @Controller('skills')
 export class SkillsController {

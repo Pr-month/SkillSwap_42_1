@@ -14,8 +14,6 @@ import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
-import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
-import { AuthenticatedRequest } from 'src/auth/auth.types';
 
 @Controller('requests')
 export class RequestsController {
