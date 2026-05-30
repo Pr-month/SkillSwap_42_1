@@ -9,6 +9,8 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
+import { AuthenticatedRequest } from 'src/auth/auth.types';
+import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
@@ -29,8 +31,15 @@ export class RequestsController {
   }
 
   @Get()
-  findAll() {
-    return this.requestsService.findAll();
+  @UseGuards(AccessTokenGuard)
+  findIncoming(@Req() req: AuthenticatedRequest) {
+    return this.requestsService.findIncoming(req.user.sub);
+  }
+
+  @Get('outgoing')
+  @UseGuards(AccessTokenGuard)
+  findOutgoing(@Req() req: AuthenticatedRequest) {
+    return this.requestsService.findOutgoing(req.user.sub);
   }
 
   @Get(':id')
