@@ -34,9 +34,7 @@ export async function seedCategories(
       });
 
       if (!existingChild) {
-        await repository.save(
-          repository.create({ name: childName, parent }),
-        );
+        await repository.save(repository.create({ name: childName, parent }));
         created++;
       } else {
         skipped++;

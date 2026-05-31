@@ -90,7 +90,7 @@ export class RequestsService {
     return request;
   }
 
-  async update(id: number, updateRequestDto: UpdateRequestDto) {
+  async update(_id: number, _updateRequestDto: UpdateRequestDto) {
     // await this.requestsRepository.update(id, updateRequestDto);
     // return this.findOne(id);
   }
