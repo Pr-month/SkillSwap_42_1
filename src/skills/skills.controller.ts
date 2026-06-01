@@ -17,7 +17,6 @@ import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { AuthenticatedRequest } from 'src/auth/auth.types';
 import { PaginationDto } from './dto/pagination.dto';
 
-
 @Controller('skills')
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}

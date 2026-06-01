@@ -33,7 +33,9 @@ export class Request {
   })
   status: RequestStatus;
 
-  @ManyToOne(() => Skill, (skill) => skill.offeredInRequests, { nullable: false })
+  @ManyToOne(() => Skill, (skill) => skill.offeredInRequests, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'offered_skill_id' })
   offeredSkill: Skill;
 
