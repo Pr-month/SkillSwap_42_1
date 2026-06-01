@@ -7,10 +7,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { UpdateRequestDto } from './dto/update-request.dto';
 import { Request } from './entities/request.entity';
 import { SkillsService } from '../skills/skills.service';
 import { RequestStatus } from './enums/request-status.enum';
+import { UserRole } from '../users/enums/user-role.enum';
 
 @Injectable()
 export class RequestsService {
@@ -83,19 +83,37 @@ export class RequestsService {
   }
 
   async findOne(id: number) {
-    const request = await this.requestsRepository.findOne({ where: { id } });
+    const request = await this.requestsRepository.findOne({
+      where: { id },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+    });
     if (!request) {
       throw new NotFoundException('Request not found');
     }
     return request;
   }
 
-  async update(id: number, updateRequestDto: UpdateRequestDto) {
-    // await this.requestsRepository.update(id, updateRequestDto);
-    // return this.findOne(id);
-  }
+  async updateStatus(id: number, userId: number, status: RequestStatus) {
+    const request = await this.findOne(id);
 
-  async remove(id: number) {
+    if (request.receiver.id !== userId) {
+      throw new ForbiddenException('You can only update incoming requests');
+    }
+
+    await this.requestsRepository.update(id, { status });
+    return this.findOne(id);
+  }
+  async removeRequest(id: number, userId: number, userRole: UserRole) {
+    const request = await this.findOne(id);
+
+    const isAdmin = userRole === UserRole.ADMIN;
+    const isSender = request.sender.id === userId;
+    if (!isAdmin && !isSender) {
+      throw new ForbiddenException(
+        'You can only delete your own sent requests',
+      );
+    }
+
     await this.requestsRepository.delete(id);
   }
 }
