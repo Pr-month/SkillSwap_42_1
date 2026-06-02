@@ -13,7 +13,7 @@ import { AuthenticatedRequest } from 'src/auth/auth.types';
 import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { UpdateRequestDto } from './dto/update-request.dto';
+import { RequestStatus } from './enums/request-status.enum';
 
 @Controller('requests')
 export class RequestsController {
@@ -44,14 +44,21 @@ export class RequestsController {
   findOne(@Param('id') id: string) {
     return this.requestsService.findOne(+id);
   }
-
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRequestDto: UpdateRequestDto) {
-    return this.requestsService.update(+id, updateRequestDto);
+  @UseGuards(AccessTokenGuard)
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: RequestStatus,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.requestsService.updateStatus(+id, req.user.sub, status);
   }
-
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.requestsService.remove(+id);
+  @UseGuards(AccessTokenGuard)
+  async removeRequest(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.requestsService.removeRequest(+id, req.user.sub, req.user.role);
   }
 }

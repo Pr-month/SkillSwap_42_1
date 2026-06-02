@@ -19,6 +19,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_ENV=test jest --config ./test/jest-e2e.json --runInBand",
     "seed:categories": "ts-node -r dotenv/config src/database/seeds/run-seed-categories.ts"
+    "seed:admin": "node -r ts-node/register -r tsconfig-paths/register src/seeding/admin.seed.ts",
+    "seed:users": "node -r ts-node/register -r tsconfig-paths/register src/seeding/user.seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
