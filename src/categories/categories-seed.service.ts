@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { seedCategories } from '../seeding/seed-categories';
+import { seedCategories } from '../database/seeds/seed-categories';
 import { Category } from './entities/category.entity';
 
 @Injectable()

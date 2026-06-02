@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Logger } from '@nestjs/common';
-import { Category } from '../categories/entities/category.entity';
-import { AppDataSource } from '../config/database.config';
+import { Category } from '../../categories/entities/category.entity';
+import { AppDataSource } from '../data-source';
 import { seedCategories } from './seed-categories';
 
 async function run() {
