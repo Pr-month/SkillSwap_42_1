@@ -40,6 +40,8 @@ function buildUser(overrides: Partial<User> = {}): User {
     skills: [],
     wantToLearn: [],
     favoriteSkills: [],
+    sentRequests: [],
+    receivedRequests: [],
   };
   return { ...defaults, ...overrides };
 }
