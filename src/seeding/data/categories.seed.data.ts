@@ -3,7 +3,7 @@ export interface CategorySeedItem {
   children: string[];
 }
 
-export const CategoriesData: CategorySeedItem[] = [
+export const categoriesSeed: CategorySeedItem[] = [
   {
     name: 'Бизнес и карьера',
     children: [
