@@ -103,7 +103,7 @@ export class RequestsService {
     await this.requestsRepository.update(id, { status });
     return this.findOne(id);
   }
-  
+
   async removeRequest(id: number, userId: number, userRole: UserRole) {
     const request = await this.findOne(id);
 

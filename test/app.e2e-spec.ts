@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import * as request from 'supertest';
+import request from 'supertest';
 import { App } from 'supertest/types';
 import { HTTP_STATUS_CODE } from '../src/common/constants/http-status-code.constant';
 import { AppModule } from './../src/app.module';
