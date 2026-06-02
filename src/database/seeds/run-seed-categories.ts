@@ -6,20 +6,22 @@ import { seedCategories } from './seed-categories';
 
 async function run() {
   const logger = new Logger('SeedCategoriesCLI');
+  let exitCode = 0;
 
   try {
     await AppDataSource.initialize();
     const repository = AppDataSource.getRepository(Category);
     await seedCategories(repository, logger);
-    await AppDataSource.destroy();
-    process.exit(0);
   } catch (error) {
     logger.error('Categories seed failed', error);
+    exitCode = 1;
+  } finally {
     if (AppDataSource.isInitialized) {
       await AppDataSource.destroy();
     }
-    process.exit(1);
   }
+
+  process.exit(exitCode);
 }
 
 void run();
