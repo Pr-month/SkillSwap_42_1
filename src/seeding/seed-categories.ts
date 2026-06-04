@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { IsNull, Repository } from 'typeorm';
-import { Category } from '../../categories/entities/category.entity';
-import { CategoriesData } from './categories.data';
+import { Category } from '../categories/entities/category.entity';
+import { categoriesSeed } from './data/categories.seed.data';
 
 export interface SeedCategoriesResult {
   created: number;
@@ -15,7 +15,7 @@ export async function seedCategories(
   let created = 0;
   let skipped = 0;
 
-  for (const { name, children } of CategoriesData) {
+  for (const { name, children } of categoriesSeed) {
     let parent = await repository.findOne({
       where: { name, parent: IsNull() },
     });
