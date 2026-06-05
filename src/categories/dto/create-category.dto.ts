@@ -6,8 +6,10 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
+  @ApiProperty({ description: 'Название категории', maxLength: 255 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255, {
@@ -15,6 +17,7 @@ export class CreateCategoryDto {
   })
   name: string;
 
+  @ApiPropertyOptional({ description: 'ID родительской категории' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
