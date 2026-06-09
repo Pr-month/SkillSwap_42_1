@@ -15,6 +15,13 @@ import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enums/user-role.enum';
+import {
+  ApiCreateCategory,
+  ApiGetAllCategories,
+  ApiGetCategoryById,
+  ApiUpdateCategory,
+  ApiDeleteCategory,
+} from './categories.swagger';
 
 @Controller('categories')
 export class CategoriesController {
@@ -23,16 +30,19 @@ export class CategoriesController {
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post()
+  @ApiCreateCategory()
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoriesService.create(createCategoryDto);
   }
 
   @Get()
+  @ApiGetAllCategories()
   findAll() {
     return this.categoriesService.findAll();
   }
 
   @Get(':id')
+  @ApiGetCategoryById()
   findOne(@Param('id') id: string) {
     return this.categoriesService.findOne(+id);
   }
@@ -40,6 +50,7 @@ export class CategoriesController {
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Patch(':id')
+  @ApiUpdateCategory()
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -50,6 +61,7 @@ export class CategoriesController {
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete(':id')
+  @ApiDeleteCategory()
   remove(@Param('id') id: string) {
     return this.categoriesService.remove(+id);
   }

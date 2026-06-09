@@ -14,6 +14,14 @@ import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { RequestStatus } from './enums/request-status.enum';
+import {
+  ApiCreateRequest,
+  ApiGetIncomingRequests,
+  ApiGetOutgoingRequests,
+  ApiGetRequestById,
+  ApiUpdateRequestStatus,
+  ApiDeleteRequest,
+} from './requests.swagger';
 
 @Controller('requests')
 export class RequestsController {
@@ -21,6 +29,7 @@ export class RequestsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiCreateRequest()
   create(
     @Body() createRequestDto: CreateRequestDto,
     @Req() req: AuthenticatedRequest,
@@ -30,22 +39,27 @@ export class RequestsController {
 
   @Get()
   @UseGuards(AccessTokenGuard)
+  @ApiGetIncomingRequests()
   findIncoming(@Req() req: AuthenticatedRequest) {
     return this.requestsService.findIncoming(req.user.sub);
   }
 
   @Get('outgoing')
   @UseGuards(AccessTokenGuard)
+  @ApiGetOutgoingRequests()
   findOutgoing(@Req() req: AuthenticatedRequest) {
     return this.requestsService.findOutgoing(req.user.sub);
   }
 
   @Get(':id')
+  @ApiGetRequestById()
   findOne(@Param('id') id: string) {
     return this.requestsService.findOne(+id);
   }
+
   @Patch(':id')
   @UseGuards(AccessTokenGuard)
+  @ApiUpdateRequestStatus()
   async updateStatus(
     @Param('id') id: string,
     @Body('status') status: RequestStatus,
@@ -53,8 +67,10 @@ export class RequestsController {
   ) {
     return this.requestsService.updateStatus(+id, req.user.sub, status);
   }
+
   @Delete(':id')
   @UseGuards(AccessTokenGuard)
+  @ApiDeleteRequest()
   async removeRequest(
     @Param('id') id: string,
     @Req() req: AuthenticatedRequest,
