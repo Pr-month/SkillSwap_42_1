@@ -11,6 +11,7 @@ import { Request } from './entities/request.entity';
 import { SkillsService } from '../skills/skills.service';
 import { RequestStatus } from './enums/request-status.enum';
 import { UserRole } from '../users/enums/user-role.enum';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class RequestsService {
@@ -18,6 +19,7 @@ export class RequestsService {
     @InjectRepository(Request)
     private readonly requestsRepository: Repository<Request>,
     private readonly skillsService: SkillsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createRequestDto: CreateRequestDto, senderId: number) {
@@ -41,7 +43,12 @@ export class RequestsService {
       status: RequestStatus.PENDING,
     });
 
-    return this.requestsRepository.save(request);
+    const saved = await this.requestsRepository.save(request);
+
+    const fullRequest = await this.findOne(saved.id);
+    this.notificationsService.notifyNewRequest(fullRequest);
+
+    return fullRequest;
   }
 
   async findIncoming(userId: number) {
@@ -101,7 +108,9 @@ export class RequestsService {
     }
 
     await this.requestsRepository.update(id, { status });
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+    this.notificationsService.notifyRequestStatusChanged(updated);
+    return updated;
   }
 
   async removeRequest(id: number, userId: number, userRole: UserRole) {

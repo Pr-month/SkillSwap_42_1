@@ -4,9 +4,14 @@ import { Request } from './entities/request.entity';
 import { RequestsController } from './requests.controller';
 import { RequestsService } from './requests.service';
 import { SkillsModule } from '../skills/skills.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Request]), SkillsModule],
+  imports: [
+    TypeOrmModule.forFeature([Request]),
+    SkillsModule,
+    NotificationsModule,
+  ],
   controllers: [RequestsController],
   providers: [RequestsService],
   exports: [TypeOrmModule, RequestsService],

@@ -2,6 +2,7 @@ import { Type } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { FilesModule } from '../files/files.module';
 import { CategoriesModule } from '../categories/categories.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { RequestsModule } from '../requests/requests.module';
 import { SkillsModule } from '../skills/skills.module';
 import { UsersModule } from '../users/users.module';
@@ -17,5 +18,6 @@ export function getAppImports(): Type<unknown>[] {
     FilesModule,
     CategoriesModule,
     RequestsModule,
+    NotificationsModule,
   ];
 }
