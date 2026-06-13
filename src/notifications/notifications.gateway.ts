@@ -1,4 +1,4 @@
-import { Inject, Logger, UseGuards } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -6,40 +6,9 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { JwtService } from '@nestjs/jwt';
-import { Server, Socket } from 'socket.io';
-import { jwtConfiguration, TJwtConfig } from '../config/jwt.config';
-import { JwtPayload } from '../auth/auth.types';
+import { Server } from 'socket.io';
 import { WsJwtGuard } from './guards/ws-jwt.guard';
-
-/** Данные, сохраняемые в `socket.data` после успешной аутентификации через JWT. */
-interface SocketData {
-  user?: JwtPayload;
-}
-
-/**
- * Извлекает access JWT из рукопожатия WebSocket подключения.
- *
- * Приоритет источников:
- * 1. Заголовок `Authorization: Bearer <token>` (предпочтительный способ).
- * 2. Query-параметр `token` (fallback для клиентов без поддержки заголовков).
- *
- * @param client — Socket.io-клиент, подключающийся к namespace `/notifications`.
- * @returns Сырая строка JWT или `null`, если токен не передан.
- */
-function extractToken(client: Socket): string | null {
-  const authHeader = client.handshake.headers?.authorization;
-  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-    return authHeader.slice(7);
-  }
-
-  const queryToken = client.handshake.query?.token;
-  if (typeof queryToken === 'string' && queryToken.length > 0) {
-    return queryToken;
-  }
-
-  return null;
-}
+import { SocketData } from './notifications.types';
 
 /**
  * WebSocket gateway для real-time уведомлений.
@@ -47,8 +16,9 @@ function extractToken(client: Socket): string | null {
  * Namespace: `/notifications`.
  *
  * Аутентификация:
- * - При подключении (`handleConnection`) access JWT проверяется вручную через
- *   {@link JwtService}, так как lifecycle-методы не проходят через гарды NestJS.
+ * - При подключении (`handleConnection`) access JWT проверяется через
+ *   {@link WsJwtGuard.verify}, так как lifecycle-методы не проходят через
+ *   механизм гардов NestJS.
  * - Для `@SubscribeMessage`-обработчиков действует {@link WsJwtGuard}, который
  *   проверяет наличие `socket.data.user`, установленного при подключении.
  *
@@ -65,40 +35,25 @@ export class NotificationsGateway
 
   private readonly logger = new Logger(NotificationsGateway.name);
 
-  constructor(
-    private readonly jwtService: JwtService,
-    @Inject(jwtConfiguration.KEY) private readonly jwtCfg: TJwtConfig,
-  ) {}
+  constructor(private readonly jwtGuard: WsJwtGuard) {}
 
   /**
    * Обрабатывает новое WebSocket подключение к namespace `/notifications`.
    *
    * Стандартные методы жизненного цикла (`handleConnection` / `handleDisconnect`)
    * не проходят через механизм гардов NestJS, поэтому JWT-проверка выполняется
-   * здесь вручную:
-   * 1. Извлекает access-токен из handshake.
-   * 2. Верифицирует его через {@link JwtService} с `accessSecret`.
-   * 3. Сохраняет payload в `socket.data.user`.
-   * 4. Присоединяет сокет к персональной комнате `user:{sub}`.
+   * через {@link WsJwtGuard.verify}:
+   * 1. Извлекает и верифицирует access-токен из handshake.
+   * 2. Сохраняет payload в `socket.data.user`.
+   * 3. Присоединяет сокет к персональной комнате `user:{sub}`.
    *
    * При отсутствии или невалидности токена соединение немедленно закрывается.
    *
    * @param client — Socket.io-клиент, инициировавший подключение.
    */
-  async handleConnection(client: Socket): Promise<void> {
+  async handleConnection(client: SocketData): Promise<void> {
     try {
-      const token = extractToken(client);
-      if (!token) {
-        this.logger.warn(`Connection rejected (no token): ${client.id}`);
-        client.disconnect();
-        return;
-      }
-
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
-        secret: this.jwtCfg.accessSecret,
-      });
-
-      (client.data as SocketData).user = payload;
+      const payload = await this.jwtGuard.verify(client);
 
       // Каждый авторизованный сокет присоединяется к персональной комнате,
       // чтобы сервис мог адресно слать уведомления конкретному пользователю.
@@ -118,8 +73,8 @@ export class NotificationsGateway
    *
    * @param client — Socket.io-клиент, разорвавший соединение.
    */
-  handleDisconnect(client: Socket): void {
-    const userId = (client.data as SocketData).user?.sub;
+  handleDisconnect(client: SocketData): void {
+    const userId = client.data.user?.sub;
     this.logger.log(
       `Client disconnected: ${client.id}` +
         (userId === undefined ? '' : ` (userId=${userId})`),
@@ -137,8 +92,8 @@ export class NotificationsGateway
    * @returns Строка `pong (userId={id})` для подтверждения связи.
    */
   @SubscribeMessage('ping')
-  handlePing(client: Socket): string {
-    const { user } = client.data as SocketData;
+  handlePing(client: SocketData): string {
+    const { user } = client.data;
     return `pong (userId=${user?.sub ?? 'unknown'})`;
   }
 
