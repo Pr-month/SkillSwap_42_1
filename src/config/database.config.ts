@@ -1,6 +1,5 @@
 import { ConfigType, registerAs } from '@nestjs/config';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { config } from 'dotenv';
 
 function createDatabaseOptions(): DataSourceOptions {
   return {
@@ -20,8 +19,8 @@ export const databaseConfig = registerAs(
   (): DataSourceOptions => createDatabaseOptions(),
 );
 
-config();
-
-export const AppDataSource = new DataSource(databaseConfig());
+export function createAppDataSource(): DataSource {
+  return new DataSource(createDatabaseOptions());
+}
 
 export type TDatabaseConfig = ConfigType<typeof databaseConfig>;
