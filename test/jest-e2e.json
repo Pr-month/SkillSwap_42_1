@@ -2,6 +2,7 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
   "testEnvironment": "node",
+  "globalSetup": "./global-setup.ts",
   "testRegex": ".e2e-spec.ts$",
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/../src/$1"

@@ -9,12 +9,13 @@ import {
   jwtConfiguration,
 } from './config/app.config';
 import { databaseConfig, TDatabaseConfig } from './config/database.config';
+import { envFilePath } from './config/env.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: envFilePath(),
       load: [appConfiguration, databaseConfig, jwtConfiguration],
     }),
     TypeOrmModule.forRootAsync({
