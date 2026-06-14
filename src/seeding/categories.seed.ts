@@ -1,27 +1,30 @@
-import 'dotenv/config';
 import { Logger } from '@nestjs/common';
 import { Category } from '../categories/entities/category.entity';
-import { AppDataSource } from '../config/database.config';
+import { createAppDataSource } from '../config/database.config';
+import { loadEnv } from '../config/env.config';
 import { seedCategories } from './seed-categories';
 
-async function run() {
+export async function runCategoriesSeed(): Promise<void> {
+  loadEnv();
+
   const logger = new Logger('SeedCategoriesCLI');
-  let exitCode = 0;
+  const dataSource = createAppDataSource();
 
   try {
-    await AppDataSource.initialize();
-    const repository = AppDataSource.getRepository(Category);
+    await dataSource.initialize();
+    const repository = dataSource.getRepository(Category);
     await seedCategories(repository, logger);
-  } catch (error) {
-    logger.error('Categories seed failed', error);
-    exitCode = 1;
   } finally {
-    if (AppDataSource.isInitialized) {
-      await AppDataSource.destroy();
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
     }
   }
-
-  process.exit(exitCode);
 }
 
-void run();
+if (require.main === module) {
+  runCategoriesSeed().catch((error) => {
+    const logger = new Logger('SeedCategoriesCLI');
+    logger.error('Categories seed failed', error);
+    process.exit(1);
+  });
+}
