@@ -52,8 +52,8 @@ export async function registerUser(
     refreshToken: body.refreshToken,
     user: {
       id: userId,
-      email: payload.email as string,
-      name: payload.name as string,
+      email: payload.email,
+      name: payload.name,
     },
   };
 }

@@ -173,7 +173,10 @@ describe('RequestsService', () => {
 
       await expect(
         service.create(
-          { offeredSkillId: offeredSkill.id, requestedSkillId: requestedSkill.id },
+          {
+            offeredSkillId: offeredSkill.id,
+            requestedSkillId: requestedSkill.id,
+          },
           sender.id,
         ),
       ).rejects.toThrow(BadRequestException);

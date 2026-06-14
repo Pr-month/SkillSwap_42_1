@@ -1,11 +1,7 @@
 import { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { HTTP_STATUS_CODE } from '../src/common/constants/http-status-code.constant';
-import {
-  authHeader,
-  loginAsAdmin,
-  registerUser,
-} from './utils/auth.helper';
+import { authHeader, loginAsAdmin, registerUser } from './utils/auth.helper';
 import { closeTestApp, createTestApp } from './utils/create-test-app';
 import { API_PREFIX } from './utils/test-data';
 

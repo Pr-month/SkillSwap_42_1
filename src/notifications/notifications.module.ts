@@ -5,10 +5,8 @@ import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsService } from './notifications.service';
 
 @Module({
-  imports: [
-    AuthModule,
-  ],
+  imports: [AuthModule],
   providers: [NotificationsGateway, NotificationsService, WsJwtGuard],
   exports: [NotificationsService],
 })
-export class NotificationsModule { }
+export class NotificationsModule {}

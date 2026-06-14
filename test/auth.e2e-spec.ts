@@ -4,7 +4,6 @@ import { HTTP_STATUS_CODE } from '../src/common/constants/http-status-code.const
 import {
   authHeader,
   decodeAccessTokenSub,
-  loginUser,
   registerUser,
 } from './utils/auth.helper';
 import { closeTestApp, createTestApp } from './utils/create-test-app';
@@ -88,9 +87,9 @@ describe('Auth (e2e)', () => {
 
       await request(app.getHttpServer())
         .post(`${API_PREFIX}/auth/register`)
-        .field('name', payload.name as string)
-        .field('email', payload.email as string)
-        .field('password', payload.password as string)
+        .field('name', payload.name)
+        .field('email', payload.email)
+        .field('password', payload.password)
         .attach('avatar', FIXTURE_VALID_PNG)
         .expect(HTTP_STATUS_CODE.CREATED);
     });

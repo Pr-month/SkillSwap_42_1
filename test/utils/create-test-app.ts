@@ -27,9 +27,7 @@ export async function createTestApp(): Promise<NestExpressApplication> {
       forbidNonWhitelisted: true,
     }),
   );
-  app.useGlobalInterceptors(
-    new ClassSerializerInterceptor(app.get(Reflector)),
-  );
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.setGlobalPrefix('api');
   await app.init();
   return app;

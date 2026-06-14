@@ -28,7 +28,9 @@ export function uniqueEmail(prefix = 'e2e'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 }
 
-export function defaultRegisterPayload(overrides: Record<string, unknown> = {}) {
+export function defaultRegisterPayload(
+  overrides: Record<string, unknown> = {},
+) {
   return {
     name: 'E2E Test User',
     email: uniqueEmail(),
