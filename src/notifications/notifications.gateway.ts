@@ -109,6 +109,9 @@ export class NotificationsGateway
    * @param data — сериализуемое тело события.
    */
   sendToUser(userId: number, event: string, data: unknown): void {
+    if (!this.server) {
+      return;
+    }
     this.server.to(`user:${userId}`).emit(event, data);
   }
 }

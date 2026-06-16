@@ -63,8 +63,21 @@ jobs:
           --health-retries=5
 
     env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: skillswap_test
       NODE_ENV: test
+      ENV_FILE: .env.test.local
+      HASH_SALT: 10
+      JWT_ACCESS_SECRET: 24f92b5cab52dcb3a6202983a8dcc0cc51d1c10050081b8b87ebf9fdeee9b7dc
+      JWT_REFRESH_SECRET: c45384c565425dcdc2ae464588dd46684ead6259db1985e02d3d2734cd4ab955
+      JWT_ACCESS_EXPIRES_IN: 1h
+      JWT_REFRESH_EXPIRES_IN: 7d
+      ADMIN_EMAIL: admin@skillswap.ru
+      ADMIN_PASSWORD: admin123
+      SEED_USER_PASSWORD: user123
 
     steps:
       - name: Checkout code

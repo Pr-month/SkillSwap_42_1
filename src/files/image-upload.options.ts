@@ -1,4 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
 import { diskStorage } from 'multer';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { randomUUID } from 'crypto';
@@ -31,12 +30,7 @@ export const imageUploadOptions: MulterOptions = {
   limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-      cb(
-        new BadRequestException(
-          `Allowed file types: ${ALLOWED_MIME_TYPES.join(', ')}`,
-        ),
-        false,
-      );
+      cb(null, false);
       return;
     }
     cb(null, true);
