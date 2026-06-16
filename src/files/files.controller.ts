@@ -10,6 +10,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { FilesService } from './files.service';
 import { imageUploadOptions } from './image-upload.options';
+import { ApiUploadFile } from './files.swagger';
 
 @Controller()
 @UseGuards(AccessTokenGuard)
@@ -18,6 +19,7 @@ export class FilesController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file', imageUploadOptions))
+  @ApiUploadFile()
   uploadFile(@UploadedFile() file: Express.Multer.File): { url: string } {
     if (!file) {
       throw new BadRequestException('File is required');

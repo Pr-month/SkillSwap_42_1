@@ -1,34 +1,22 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import { DataSource } from 'typeorm';
-import * as request from 'supertest';
-import { App } from 'supertest/types';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import request from 'supertest';
 import { HTTP_STATUS_CODE } from '../src/common/constants/http-status-code.constant';
-import { AppModule } from './../src/app.module';
+import { closeTestApp, createTestApp } from './utils/create-test-app';
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: NestExpressApplication;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+  beforeAll(async () => {
+    app = await createTestApp();
   });
 
-  afterEach(async () => {
-    const dataSource = app.get(DataSource);
-    await app.close();
-    if (dataSource.isInitialized) {
-      await dataSource.destroy();
-    }
+  afterAll(async () => {
+    await closeTestApp(app);
   });
 
-  it('/ (GET)', () => {
+  it('/api (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/api')
       .expect(HTTP_STATUS_CODE.OK)
       .expect('Hello World!');
   });

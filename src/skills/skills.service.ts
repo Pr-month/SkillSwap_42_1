@@ -66,7 +66,10 @@ export class SkillsService {
   }
 
   async findOne(id: number) {
-    const skill = await this.skillsRepository.findOne({ where: { id } });
+    const skill = await this.skillsRepository.findOne({
+      where: { id },
+      relations: ['owner'],
+    });
     if (!skill) {
       throw new NotFoundException('Skill not found');
     }

@@ -17,6 +17,12 @@ import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { HTTP_STATUS_CODE } from '../common/constants/http-status-code.constant';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { imageUploadOptions } from '../files/image-upload.options';
+import {
+  ApiAuthLogin,
+  ApiAuthLogout,
+  ApiAuthRegister,
+  ApiAuthRefresh,
+} from './auth.swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -24,6 +30,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HTTP_STATUS_CODE.OK)
+  @ApiAuthLogin()
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -31,12 +38,14 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HTTP_STATUS_CODE.OK)
   @UseGuards(AccessTokenGuard)
+  @ApiAuthLogout()
   logout(@Req() req: AuthenticatedRequest) {
     return this.authService.logout(req.user.sub);
   }
 
   @Post('register')
   @UseInterceptors(FileInterceptor('avatar', imageUploadOptions))
+  @ApiAuthRegister()
   register(
     @Body() dto: RegisterDto,
     @UploadedFile() avatar?: Express.Multer.File,
@@ -47,6 +56,7 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HTTP_STATUS_CODE.OK)
   @UseGuards(RefreshTokenGuard)
+  @ApiAuthRefresh()
   refresh(@Req() req: Request & { user: RefreshAuthUser }) {
     return this.authService.refreshSession(req.user);
   }
