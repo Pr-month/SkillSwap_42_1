@@ -104,8 +104,6 @@ describe('AuthService', () => {
     jest.clearAllMocks();
   });
 
-  // ---------------------------------------------------------------
-
   describe('register', () => {
     const dto: RegisterDto = {
       name: 'John',
@@ -153,8 +151,6 @@ describe('AuthService', () => {
     });
   });
 
-  // ---------------------------------------------------------------
-
   describe('hashPassword', () => {
     it('должен вернуть bcrypt-хеш, отличный от исходного пароля', async () => {
       const hash = await service.hashPassword('mypassword');
@@ -169,8 +165,6 @@ describe('AuthService', () => {
     });
   });
 
-  // ---------------------------------------------------------------
-
   describe('hashRefreshToken', () => {
     it('должен вернуть bcrypt-хеш токена', async () => {
       const hash = await service.hashRefreshToken('some-raw-token');
@@ -178,8 +172,6 @@ describe('AuthService', () => {
       expect(await bcrypt.compare('some-raw-token', hash)).toBe(true);
     });
   });
-
-  // ---------------------------------------------------------------
 
   describe('issueTokenPair', () => {
     it('должен подписать оба токена и сохранить хеш refresh в БД', async () => {
@@ -216,8 +208,6 @@ describe('AuthService', () => {
     });
   });
 
-  // ---------------------------------------------------------------
-
   describe('refreshSession', () => {
     it('должен вернуть новую пару токенов для существующего пользователя', async () => {
       repoMock.findOne.mockResolvedValue(
@@ -251,6 +241,48 @@ describe('AuthService', () => {
           role: UserRole.USER,
         }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('login', () => {
+    const dto = { email: 'test@example.com', password: 'password123' };
+
+    it('должен вернуть токены при правильных учетных данных', async () => {
+      const user = buildUser({ email: dto.email, passwordHash: 'hashed' });
+      repoMock.findOne.mockResolvedValue(user);
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+      jwtServiceMock.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+
+      const result = await service.login(dto);
+
+      expect(result).toEqual({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      });
+    });
+
+    it('должен выбросить UnauthorizedException если пользователь не найден', async () => {
+      repoMock.findOne.mockResolvedValue(null);
+
+      await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('должен выбросить UnauthorizedException если пароль неверный', async () => {
+      const user = buildUser({ email: dto.email, passwordHash: 'hashed' });
+      repoMock.findOne.mockResolvedValue(user);
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+
+      await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('logout', () => {
+    it('должен обновить refreshToken в null', async () => {
+      await service.logout(1);
+
+      expect(repoMock.update).toHaveBeenCalledWith(1, { refreshToken: null });
     });
   });
 });
