@@ -11,35 +11,45 @@ import { User } from './entities/user.entity';
 import { appConfiguration } from '../config/app-configuration';
 import { UpdateUserDto } from './dto/update-user.dto';
 
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+  hash: jest.fn(),
+}));
+
 const mockUserRepository = () => ({
-  findOne: jest.fn(),
-  find: jest.fn(),
-  create: jest.fn(),
-  save: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
+  findOne: jest.fn<Promise<User | null>, [{ where: { id: number } }]>(),
+  find: jest.fn<Promise<User[]>, [unknown?]>(),
+  create: jest.fn<User, [Partial<User>]>((dto) => dto as User),
+  save: jest.fn<Promise<User>, [User]>((user) => Promise.resolve(user)),
+  update: jest
+    .fn<Promise<void>, [number, Partial<User>]>()
+    .mockResolvedValue(undefined),
+  delete: jest
+    .fn<Promise<{ affected?: number | null }>, [number]>()
+    .mockResolvedValue({ affected: 1 }),
 });
 
 describe('UsersService', () => {
   let service: UsersService;
-  let userRepo: any;
+  let userRepo: ReturnType<typeof mockUserRepository>;
 
   beforeEach(async () => {
+    userRepo = mockUserRepository();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        { provide: getRepositoryToken(User), useFactory: mockUserRepository },
+        { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: appConfiguration.KEY, useValue: { hashSalt: 10 } },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    userRepo = module.get(getRepositoryToken(User));
   });
 
   describe('findMe', () => {
     it('должен вернуть пользователя если он найден', async () => {
-      const user = { id: 1, name: 'Test' };
+      const user = { id: 1, name: 'Test' } as User;
       userRepo.findOne.mockResolvedValue(user);
 
       const result = await service.findMe(1);
@@ -57,15 +67,17 @@ describe('UsersService', () => {
     const updateDto: UpdateUserDto = { name: 'New Name' };
 
     it('должен обновить пользователя', async () => {
-      const user = { id: 1, name: 'Old Name' };
+      const user = { id: 1, name: 'Old Name' } as User;
+      const updatedUser = { ...user, ...updateDto } as User;
       userRepo.findOne.mockResolvedValue(user);
-      userRepo.update.mockResolvedValue({ affected: 1 });
+      userRepo.update.mockResolvedValue(undefined);
       userRepo.findOne
         .mockResolvedValueOnce(user)
-        .mockResolvedValueOnce({ ...user, ...updateDto });
+        .mockResolvedValueOnce(updatedUser);
 
       const result = await service.update(1, updateDto);
-      expect(result.name).toBe('New Name');
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('New Name');
     });
 
     it('должен выбросить NotFoundException если пользователь не найден', async () => {
@@ -77,8 +89,8 @@ describe('UsersService', () => {
     });
 
     it('должен выбросить ConflictException если email уже занят другим пользователем', async () => {
-      const user = { id: 1 };
-      const existingUser = { id: 2, email: 'test@example.com' };
+      const user = { id: 1 } as User;
+      const existingUser = { id: 2, email: 'test@example.com' } as User;
       userRepo.findOne
         .mockResolvedValueOnce(user)
         .mockResolvedValueOnce(existingUser);
@@ -94,10 +106,10 @@ describe('UsersService', () => {
     const newPassword = 'newPass123';
 
     it('должен обновить пароль когда старый пароль верный', async () => {
-      const user = { id: 1, passwordHash: 'hashed' };
+      const user = { id: 1, passwordHash: 'hashed' } as User;
       userRepo.findOne.mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('newHashed' as never);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('newHashed');
 
       await service.updatePassword(1, oldPassword, newPassword);
 
@@ -115,9 +127,9 @@ describe('UsersService', () => {
     });
 
     it('должен выбросить UnauthorizedException если старый пароль неверный', async () => {
-      const user = { id: 1, passwordHash: 'hashed' };
+      const user = { id: 1, passwordHash: 'hashed' } as User;
       userRepo.findOne.mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
         service.updatePassword(1, 'wrong', newPassword),

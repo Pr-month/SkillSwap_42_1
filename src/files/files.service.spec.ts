@@ -7,6 +7,7 @@ const mockedFs = fs as jest.Mocked<typeof fs>;
 
 describe('FilesService', () => {
   let service: FilesService;
+  let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -15,6 +16,12 @@ describe('FilesService', () => {
 
     service = module.get<FilesService>(FilesService);
     jest.clearAllMocks();
+
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   describe('getPublicUrl', () => {
@@ -47,10 +54,24 @@ describe('FilesService', () => {
       await expect(
         service.deleteFile(`/${UPLOAD_DIR}/missing.txt`),
       ).resolves.toBeUndefined();
+
+      expect(mockedFs.unlink).toHaveBeenCalled();
     });
 
     it('должен предотвращать path traversal атаки', async () => {
+      mockedFs.unlink.mockResolvedValue(undefined);
+
       await service.deleteFile(`/${UPLOAD_DIR}/../../etc/passwd`);
+
+      expect(mockedFs.unlink).toHaveBeenCalled();
+    });
+
+    it('должен логировать ошибку при других проблемах', async () => {
+      const error = new Error('Permission denied');
+      mockedFs.unlink.mockRejectedValue(error);
+
+      await service.deleteFile(`/${UPLOAD_DIR}/test.txt`);
+
       expect(mockedFs.unlink).toHaveBeenCalled();
     });
   });
