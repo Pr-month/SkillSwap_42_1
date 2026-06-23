@@ -4,6 +4,34 @@
 [Техническое задание](https://docs.google.com/document/d/1d4o9Sb9o6lxXuqdEgKe4eRlH2s7gKrh0icJ3gyv2FD4/edit?tab=t.0#heading=h.ynonjn54b672) <br>
 [Макет](https://www.figma.com/design/bKwOakHJI7Z2mh2zVCBphP/SkillSwap---Для-разработчиков?node-id=0-1&p=f&t=HH7S4bYwVVtxLM6z-0)
 
+## Структура репозитория
+
+Исходный код серверной части находится в папке `backend/`. Все команды (установка зависимостей, запуск, тесты, линтер) выполняются из этой папки.
+
+```
+.
+├── backend/      # NestJS приложение (package.json, src/, test/)
+├── .docs/        # спецификация (PRD) и артефакты
+└── docker-compose.yml
+```
+
+## Локальный запуск
+
+```bash
+cd backend
+cp .env.example .env      # заполнить переменные окружения
+npm install
+npm run start:dev
+```
+
+База данных поднимается отдельно из корня репозитория:
+
+```bash
+docker compose up -d
+```
+
+---
+
 ## Основные ветки
 
 - `main` — стабильная, протестированная версия приложения (MVP). Прямой пуш запрещён. Мерж осуществляется только после прохождения всех тестов.
