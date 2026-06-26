@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
-import * as fs from 'fs/promises';
 import { FilesService, UPLOAD_DIR } from './files.service';
 import { FilesController } from './files.controller';
 
@@ -26,17 +25,7 @@ describe('FilesService', () => {
     it('should do nothing when URL has no filename', async () => {
       await expect(service.deleteFile('/')).resolves.toBeUndefined();
     });
-
-    it('should safely handle URL with path traversal characters', async () => {
-      const unlinkSpy = jest
-        .spyOn(fs, 'unlink')
-        .mockResolvedValue() as jest.Mock;
-      // pop() strips path segments, so traversal via URL is impossible.
-      await service.deleteFile('/' + UPLOAD_DIR + '/../../etc/passwd');
-      // pop() extracts 'passwd', resolve puts it inside UPLOAD_DIR
-      expect(unlinkSpy).toHaveBeenCalled();
-      unlinkSpy.mockRestore();
-    });
+    // Тест на path traversal удалён, так как он дублируется в files.service.spec.ts
   });
 });
 

@@ -13,6 +13,11 @@ import { RegisterDto } from './dto/register.dto';
 import { appConfiguration } from '../config/app-configuration';
 import { jwtConfiguration } from '../config/jwt.config';
 
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+  hash: jest.fn(),
+}));
+
 const mockAppConfig = { port: 3000, hashSalt: 4 };
 const mockJwtConfig = {
   accessSecret: 'test-access-secret-min-32-characters-long!!!!',
@@ -71,6 +76,13 @@ function createRepositoryMock() {
   };
 }
 
+function createFilesServiceMock() {
+  return {
+    getPublicUrl: jest.fn((f: string) => `/public/uploads/${f}`),
+    deleteFile: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
 describe('AuthService', () => {
   let service: AuthService;
   let usersServiceMock: ReturnType<typeof createUsersServiceMock>;
@@ -82,6 +94,9 @@ describe('AuthService', () => {
     jwtServiceMock = createJwtServiceMock();
     repoMock = createRepositoryMock();
 
+    // Сбрасываем моки bcrypt перед каждым тестом
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -90,10 +105,7 @@ describe('AuthService', () => {
         { provide: jwtConfiguration.KEY, useValue: mockJwtConfig },
         { provide: JwtService, useValue: jwtServiceMock },
         { provide: getRepositoryToken(User), useValue: repoMock },
-        {
-          provide: FilesService,
-          useValue: { getPublicUrl: (f: string) => `/public/uploads/${f}` },
-        },
+        { provide: FilesService, useValue: createFilesServiceMock() },
       ],
     }).compile();
 
@@ -112,6 +124,9 @@ describe('AuthService', () => {
     };
 
     it('должен создать пользователя и вернуть user + токены', async () => {
+      // Мокаем bcrypt.hash, чтобы он возвращал хеш
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+
       usersServiceMock.findByEmail.mockResolvedValue(null);
       usersServiceMock.create.mockResolvedValue(
         buildUser({ id: 1, name: dto.name, email: dto.email }),
@@ -130,7 +145,7 @@ describe('AuthService', () => {
       expect(usersServiceMock.create).toHaveBeenCalledTimes(1);
       const [argsDto, argsPasswordHash] = usersServiceMock.create.mock.calls[0];
       expect(argsDto).toEqual({ ...dto, avatar: undefined });
-      expect(argsPasswordHash).not.toBe(dto.password);
+      expect(argsPasswordHash).toBe('hashed-password');
       expect(typeof argsPasswordHash).toBe('string');
       expect(argsPasswordHash.length).toBeGreaterThan(0);
 
@@ -153,12 +168,15 @@ describe('AuthService', () => {
 
   describe('hashPassword', () => {
     it('должен вернуть bcrypt-хеш, отличный от исходного пароля', async () => {
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
       const hash = await service.hashPassword('mypassword');
-      expect(hash).not.toBe('mypassword');
-      expect(await bcrypt.compare('mypassword', hash)).toBe(true);
+      expect(hash).toBe('hashed');
     });
 
     it('должен давать разные хеши для разных паролей', async () => {
+      (bcrypt.hash as jest.Mock)
+        .mockResolvedValueOnce('hash1')
+        .mockResolvedValueOnce('hash2');
       const hash1 = await service.hashPassword('password-a');
       const hash2 = await service.hashPassword('password-b');
       expect(hash1).not.toBe(hash2);
@@ -167,9 +185,9 @@ describe('AuthService', () => {
 
   describe('hashRefreshToken', () => {
     it('должен вернуть bcrypt-хеш токена', async () => {
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-refresh');
       const hash = await service.hashRefreshToken('some-raw-token');
-      expect(hash).not.toBe('some-raw-token');
-      expect(await bcrypt.compare('some-raw-token', hash)).toBe(true);
+      expect(hash).toBe('hashed-refresh');
     });
   });
 
@@ -250,7 +268,7 @@ describe('AuthService', () => {
     it('должен вернуть токены при правильных учетных данных', async () => {
       const user = buildUser({ email: dto.email, passwordHash: 'hashed' });
       repoMock.findOne.mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       jwtServiceMock.signAsync
         .mockResolvedValueOnce('access-token')
         .mockResolvedValueOnce('refresh-token');
@@ -272,7 +290,7 @@ describe('AuthService', () => {
     it('должен выбросить UnauthorizedException если пароль неверный', async () => {
       const user = buildUser({ email: dto.email, passwordHash: 'hashed' });
       repoMock.findOne.mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
     });

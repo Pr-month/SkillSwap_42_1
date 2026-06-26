@@ -9,6 +9,7 @@ import { Skill } from '../skills/entities/skill.entity';
 import { SkillsService } from '../skills/skills.service';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/enums/user-role.enum';
+import { NotificationsService } from '../notifications/notifications.service';
 import { Request } from './entities/request.entity';
 import { RequestStatus } from './enums/request-status.enum';
 import { RequestsService } from './requests.service';
@@ -89,20 +90,32 @@ function createSkillsServiceMock() {
   };
 }
 
+function createNotificationsServiceMock() {
+  return {
+    notifyNewRequest: jest.fn(),
+    notifyRequestStatusChanged: jest.fn(),
+  };
+}
+
 describe('RequestsService', () => {
   let service: RequestsService;
   let repoMock: ReturnType<typeof createRequestsRepositoryMock>;
   let skillsServiceMock: ReturnType<typeof createSkillsServiceMock>;
+  let notificationsServiceMock: ReturnType<
+    typeof createNotificationsServiceMock
+  >;
 
   beforeEach(async () => {
     repoMock = createRequestsRepositoryMock();
     skillsServiceMock = createSkillsServiceMock();
+    notificationsServiceMock = createNotificationsServiceMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RequestsService,
         { provide: getRepositoryToken(Request), useValue: repoMock },
         { provide: SkillsService, useValue: skillsServiceMock },
+        { provide: NotificationsService, useValue: notificationsServiceMock },
       ],
     }).compile();
 
@@ -124,6 +137,26 @@ describe('RequestsService', () => {
         .mockResolvedValueOnce(offeredSkill)
         .mockResolvedValueOnce(requestedSkill);
 
+      repoMock.findOne
+        .mockResolvedValueOnce(
+          buildRequest({
+            id: 1,
+            sender,
+            receiver,
+            offeredSkill,
+            requestedSkill,
+          }),
+        )
+        .mockResolvedValueOnce(
+          buildRequest({
+            id: 1,
+            sender,
+            receiver,
+            offeredSkill,
+            requestedSkill,
+          }),
+        );
+
       const result = await service.create(
         { offeredSkillId: 10, requestedSkillId: 20 },
         sender.id,
@@ -144,6 +177,8 @@ describe('RequestsService', () => {
       expect(result.status).toBe(RequestStatus.PENDING);
       expect(result.offeredSkill).toBe(offeredSkill);
       expect(result.requestedSkill).toBe(requestedSkill);
+
+      expect(notificationsServiceMock.notifyNewRequest).toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when sender offers another user skill', async () => {
@@ -284,6 +319,9 @@ describe('RequestsService', () => {
         status: RequestStatus.ACCEPTED,
       });
       expect(result).toBe(updatedRequest);
+      expect(
+        notificationsServiceMock.notifyRequestStatusChanged,
+      ).toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when current user is not request receiver', async () => {
